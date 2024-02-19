@@ -1,2 +1,3 @@
-data/bkg.png 0
-data/Button.png 0
+data/bkg.png 2
+data/Button.png 2
+cat.ico 2
