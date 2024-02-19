@@ -1,2 +1,2 @@
-/data/bkg.png 0.1
-/data/Button.png 0.1
+/data/bkg.png 0
+/data/Button.png 0
