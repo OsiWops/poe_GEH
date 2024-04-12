@@ -12,13 +12,18 @@ from PIL import Image, ImageTk
 import re
 from pystray import Icon, MenuItem as item
 
+from configuration import Configuration
+
 class Exit_flag:
     def __init__(self):
         self.val = False
     def false(self):
         self.val = True
+    def get_val(self):
+        return self.val
 
 exit_flag = Exit_flag()
+cfg = Configuration()
 
 current_utc_time = datetime.datetime.now(datetime.timezone.utc)
 current_time = (current_utc_time + datetime.timedelta(hours=3)).strftime("%H:%M:%S")
@@ -42,9 +47,6 @@ def handle_choice(choice):
 
 def close_window():
     root.destroy()
-
-def EscEvent(event):
-    print('Жмак ESC')
 
 def show_choice_window(time_date, message):
     global root
@@ -104,7 +106,6 @@ def show_choice_window(time_date, message):
     participate_button.pack(side=tk.LEFT)
 
     decline_button = tk.Button(button_frame, text="Отказаться", padx=10, pady=10, command=root.destroy)
-    decline_button.bind("<Escape>", EscEvent)
     decline_button.pack(side=tk.RIGHT)
 
     close_window_after_1min(root)
@@ -123,18 +124,18 @@ def home_folder(icon, item):
     current_directory = os.path.dirname(os.path.abspath(__file__))
     os.startfile(current_directory)
 
-def on_open_folder_clicked(icon, item):
-    config = read_config_file()
-    if 'FileSettings' in config and 'client_file_path' in config['FileSettings']:
-        folder_path = os.path.dirname(config['FileSettings']['client_file_path'])
-        os.startfile(folder_path)
+def selectClientLogFileClick(icon, item):
+    cfg.selectClientLogFile()
 
 def on_open_settings_clicked(icon, item):
     os.startfile('settingsg.ini')
 
 def create_and_run_tray_icon():
+    #load_config()
+    global icon
     icon = create_tray_icon()
     icon.run()
+    icon.stop()
 
 #тестовая функция, что бы не дергать чат в игре, для работы раскомментировать пункт меню тест в трее
 def test(icon, item):
@@ -163,53 +164,45 @@ def test2(icon, item):
 
 def create_tray_icon():
     print('Иконка')
-    image_path = "cat.ico"  # Замените на путь к вашему изображению
-    icon = Image.open(image_path)
-    icon = icon.resize((30, 30), Image.BICUBIC)
-    icon = Image.open(image_path).resize((30, 30), Image.BICUBIC)
-    icon = Image.open(image_path).resize((30, 30), Image.BICUBIC)
+    image_path = "ico.ico"  # Замените на путь к вашему изображению
+    icon = Image.open(image_path) ##.resize((30, 30), Image.BICUBIC)
     #tk_icon = ImageTk.PhotoImage(icon)
 
     # Сохраните изображение в формате ICO
-    icon_path = 'path_to_save_icon.ico'
-    icon.save(icon_path, format='ICO')
+    #icon_path = 'ico.ico'
+    #icon.save(icon_path, format='ICO')
+
+    # В душе не ебу, почему он считает False из конфига == True, заебся дебажить, да будет так
+    update = cfg.get_update()
+    if update == 'False':
+        update = False
+    else: update = True
 
     menu = (item('Выход', lambda icon, item: on_exit_clicked(icon, item)),
-            item('Открыть папку Client.txt', lambda icon, item: on_open_folder_clicked(icon, item)),
+            item('Указать файл Client.txt', lambda icon, item: selectClientLogFileClick(icon, item)),
             item('Открыть папку программы', lambda icon, item: home_folder(icon, item)),
             item('Открыть настройки', lambda icon, item: on_open_settings_clicked(icon, item)),
+            item('Проверять обновления', ChangeUpdateSettings, checked = lambda item: update),
             item('Тест ЛГБТ', lambda icon, item: test(icon, item)),
             item('Тест Common', lambda icon, item: test2(icon, item)))
 
     icon_tray = Icon("name", icon, "Оповещение", menu)
     return icon_tray
 
+def ChangeUpdateSettings(icon, item):
+    cfg.set_update(not item.checked)
+    
 def check_file_for_new_lines():
     global previous_lines
-    config = read_config_file()
-
     target_date = datetime.datetime.now(datetime.timezone.utc).strftime("%Y/%m/%d")
-
-    if 'FileSettings' not in config:
-        root = tk.Tk()
-        root.withdraw()
-        client_file_path = filedialog.askopenfilename(title="Выберите файл в папке Path of Exile\\logs\\Client.txt")
-        if client_file_path:
-            config['FileSettings'] = {}
-            config['FileSettings']['client_file_path'] = client_file_path
-            with open('settingsg.ini', 'w') as configfile:
-                config.write(configfile)
-            root.quit()
-        else:
-            root.quit()
-            print("Файл не выбран. Завершение скрипта.")
-            import sys
-            sys.exit()
-
+    if cfg.get_path_to_client_log() == '':
+        import sys
+        icon_thread.join(0)
+        exit_flag.false()
     else:
         i = 0
         try:
-            client_file_path = config['FileSettings']['client_file_path']
+            client_file_path = cfg.get_path_to_client_log()
             with open(client_file_path, 'r', encoding='utf-8') as file:
                 lines = set(file.readlines())
                 new_lines = lines.difference(previous_lines)
@@ -226,15 +219,11 @@ def check_file_for_new_lines():
                                 break
                 previous_lines = lines.copy()
         except Exception as e:
-            print(f"Произошла ошибка при чтении файла: {e}")
-
-def read_config_file():
-    config = configparser.ConfigParser()
-    config.read('settingsg.ini')
-    return config
+            pass
+            #print(f"Произошла ошибка при чтении файла: {e}")
 
 def main():
-    while not exit_flag.val:
+    while not exit_flag.val:     
         check_file_for_new_lines()
         time.sleep(1)
 
@@ -243,5 +232,8 @@ icon_thread = threading.Thread(target=create_and_run_tray_icon, name = 'TrayThre
 main_thread = threading.Thread(target=main, name = "MainThread")
 icon_thread.start()
 main_thread.start()
-icon_thread.join()
-main_thread.join()
+
+# Ждем флага закрытия процесса и на всякий случай прибиваем трей
+while not exit_flag.get_val():
+    time.sleep(1)
+icon.stop()
