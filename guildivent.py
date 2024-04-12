@@ -128,7 +128,7 @@ def selectClientLogFileClick(icon, item):
     cfg.selectClientLogFile()
 
 def on_open_settings_clicked(icon, item):
-    os.startfile('settingsg.ini')
+    os.startfile('settings.ini')
 
 def create_and_run_tray_icon():
     #load_config()
