@@ -9,6 +9,24 @@ class Configuration:
         self.check_update = bool('False')
         self.debug = False
         self.load_config_from_file()
+        self.fullMessage: str = ''
+        self.log_datetime: str = ''
+
+    def set_log_datetime(self, log_datetime):
+        self.log_datetime = log_datetime
+
+    def get_log_datetime(self):
+        return self.log_datetime
+
+    def set_fullMessage(self, message:str):
+        self.fullMessage = message
+
+    def get_fullMessage(self):
+        return self.fullMessage
+
+    def clearMessage(self):
+        self.log_datetime = ''
+        self.fullMessage = ''
 
     def load_config_from_file(self):
         
