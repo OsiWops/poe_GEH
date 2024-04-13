@@ -24,6 +24,7 @@ class Exit_flag:
 
 exit_flag = Exit_flag()
 cfg = Configuration()
+state = 0
 
 current_utc_time = datetime.datetime.now(datetime.timezone.utc)
 current_time = (current_utc_time + datetime.timedelta(hours=3)).strftime("%H:%M:%S")
@@ -198,7 +199,6 @@ def test2(icon, item):
             cfg.set_log_datetime(log_datetime)
             cfg.set_fullMessage(message)
 
-
 def create_tray_icon():
     print('Иконка')
     image_path = "ico.ico"  # Замените на путь к вашему изображению
@@ -209,29 +209,15 @@ def create_tray_icon():
     #icon_path = 'ico.ico'
     #icon.save(icon_path, format='ICO')
 
-    # В душе не ебу, почему он считает False из конфига == True, заебся дебажить, да будет так
-    update = cfg.get_update()
-    print('cfg.getUpdate() = ' + update)
-    if update == 'False':
-        update = False
-    else: update = True
-
     menu = (item('Выход', lambda icon, item: on_exit_clicked(icon, item)),
             item('Указать файл Client.txt', lambda icon, item: selectClientLogFileClick(icon, item)),
             item('Открыть папку программы', lambda icon, item: home_folder(icon, item)),
             item('Открыть настройки', lambda icon, item: on_open_settings_clicked(icon, item)),
-            item('Проверять обновления', ChangeUpdateSettings, checked = lambda item: update),
             item('Тест ЛГБТ', lambda icon, item: test(icon, item)),
             item('Тест Common', lambda icon, item: test2(icon, item)))
 
     icon_tray = Icon("name", icon, "Оповещение", menu)
     return icon_tray
-
-def ChangeUpdateSettings(icon, item):
-    print('значение кнопки - ' + str(not item.checked))
-    cfg.set_update(not item.checked)
-    global update
-    update = not item.checked
 
     
 def check_file_for_new_lines():
