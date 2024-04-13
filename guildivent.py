@@ -135,7 +135,7 @@ def show_choice_window(time_date, message):
         label_requirements.grid(row = 5, column = 0, columnspan = 2)
     else:
         label_message = tk.Label(text=f"ОПИСАНИЕ: {message}", font=("Arial", 24), wraplength=300)
-        label_message.grid(row = 0, column = 0, columnspan = 2)
+        label_message.grid(row = 1, column = 0, columnspan = 2)
   
     participate_button = tk.Button(text="Участвую", padx=10, pady=10, command=lambda: handle_choice("Участвую"))
     participate_button.grid(row=6, column=0, sticky='E', padx=5, pady=5)
